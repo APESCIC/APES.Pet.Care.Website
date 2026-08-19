@@ -1,3 +1,52 @@
+## [v3.3.11] - 2026-08-19
+
+<span class="pill pill-version">Version v3.3.11</span>
+<span class="pill pill-status">Stable</span>
+<span class="pill pill-type">Changed</span>
+<span class="pill pill-content">Contact Details</span>
+<span class="pill pill-fix">Crawl Protection</span>
+
+### Summary
+
+Updated live clinic contact details to the Morris Street address including Merseyside, the new St Helens phone number, and a visitor-visible clinic email that is not offered to crawlers to follow or reuse.
+
+### Detailed changes
+
+- Replaced the published phone number `0300 302 0228` with `01744 374 015` (`tel:01744374015`, JSON-LD `+441744374015`) across shared chrome, sidebars, contact and donate copy, error pages, and `public/sitemap.html`.
+- Expanded the postal address to `40 Morris Street, St Helens, Merseyside, WA9 3EN`.
+- Kept `info@apespetcare.org.uk` available to visitors through `rel="nofollow"` links hydrated from split data attributes in `public/assets/js/site.js`, with a noscript fallback that does not use a harvestable `mailto:` string.
+- Removed the Organization JSON-LD `email` property so search engines are not given the address in structured data.
+- Synced header and footer fragments through `dev/sync-site-chrome.php` where PHP CLI is available, and aligned mirrored version files, changelogs, Change Log Hub, README, and footer version text to `v3.3.11`.
+
+### Type pills
+
+- <span class="pill pill-type">Changed</span> Updates visitor-facing contact copy on existing routes without changing routing, forms, or hosting.
+- <span class="pill pill-content">Contact Details</span> Aligns address, phone, and clinic email across chrome, page copy, and structured data.
+- <span class="pill pill-fix">Crawl Protection</span> Stops crawlers being given a plaintext `mailto:` address or JSON-LD email to follow or reuse.
+
+### Affected areas
+
+- Website: APES Pet Care Clinic public website.
+- Page or route: Shared header and footer, Contact, Donate, Need Help Fast sidebars, Organization JSON-LD, Change Log Hub, error pages, and sitemap HTML.
+- Files changed: `public/includes/header.html`, `public/includes/footer.html`, `public/assets/js/site.js`, runtime HTML routes, `public/sitemap.html`, `VERSION`, `public/VERSION`, `CHANGELOG.md`, `public/CHANGELOG.md`, `public/changelog/index.html`, and `README.md`.
+- User groups affected: Public visitors looking up clinic contact details.
+- Public impact: Callers and visitors see the new phone number and full postal address; the clinic email remains usable in the browser without being published for crawler reuse.
+- Internal impact: GitHub issue #34 tracks this patch. Email harvesters that execute JavaScript can still recover the address.
+
+### Version decision
+
+- Previous version: `v3.3.10`
+- New version: `v3.3.11`
+- Version type: Stable patch release
+- Reason for version bump: This is a visitor-facing contact-details correction and crawl-protection change on existing routes with no hosting or architecture change.
+
+### Validation
+
+- Checks run: leftover-string grep on live `public/` excluding `public/crawl/`, PHP chrome sync where CLI is available, local preview at `http://127.0.0.1:8080/` and `/contact/`, and a `file:///` static-page check.
+- Manual checks completed: Confirm hydrated email links use `rel="nofollow"`, JSON-LD has no `email` property, and address copy includes Merseyside.
+- Known limitations: JavaScript-capable harvesters can still assemble the email. `file:///` cannot exercise PHP routing. Historical `public/crawl/` archives were left unchanged.
+- Rollback notes: Restore previous chrome, JSON-LD email, and phone copy, then revert mirrored release records to `v3.3.10`.
+
 ## [v3.3.10] - 2026-06-12
 
 <span class="pill pill-version">Version v3.3.10</span>

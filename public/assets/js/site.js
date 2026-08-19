@@ -785,6 +785,20 @@
     updateEntries();
   }
 
+  const hydrateClinicEmails = () => {
+    document.querySelectorAll(".js-clinic-email").forEach((link) => {
+      const user = link.getAttribute("data-email-user");
+      const domain = link.getAttribute("data-email-domain");
+      if (!user || !domain) return;
+      const address = `${user}@${domain}`;
+      link.setAttribute("href", `mailto:${address}`);
+      link.setAttribute("rel", "nofollow");
+      link.textContent = address;
+    });
+  };
+
+  hydrateClinicEmails();
+
   const cards = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(

@@ -61,7 +61,7 @@ During planning, identify and ask for any missing decision on:
 2. **Release status:** whether the release should be Beta or Stable.
 3. **Versioning:** the expected version bump, whether existing version records should be updated, and whether beta suffixes are required.
 4. **Changelog scope:** whether the root changelog, `/public/CHANGELOG.md`, Change Log Hub, release metadata, or public release cards must be updated.
-5. **Website type:** for new websites or migrations, whether the target is the default HTML website model, campaign or landing page, information hub, knowledge hub, form-led site, built frontend-only single page application, or an exceptional PHP-backed feature that is needed for support tooling, routing, forms, search, maintenance, or light server-side processing.
+5. **Website type:** for new websites or migrations, whether the target is static, PHP, WordPress-style or CMS-backed, campaign or landing page, information hub, knowledge hub, form-led site, built frontend-only single page application, custom PHP and database-backed site, or a system that needs a non-PHP runtime.
 6. **Hosting target:** whether the site is expected to run on Cloudron LAMP, another static/PHP host, or a runtime that requires further hosting review.
 7. **Target site and path:** for multi-site or monorepo work, which site, package, folder, route, or public path is in scope.
 8. **Issue workflow:** whether to create a new issue, start an existing issue, update progress, link a pull request, or defer issue updates.
@@ -91,7 +91,7 @@ npm run test:e2e
 npm run build
 ```
 
-For generic APES CIC HTML website repositories using the standard `public/` website folder and PHP support tools, local preview should usually support:
+For generic APES CIC static or PHP-backed website repositories using the standard `public/` website folder, local preview should usually support:
 
 ```bash
 php -S 127.0.0.1:8080 -t public dev/router.php
@@ -271,10 +271,6 @@ Do not describe this section as applying only to the current website. It is a re
 
 For every applicable APES CIC website repository, `public/` is the website folder and public web root.
 
-Set up APES CIC websites as HTML websites by default: static HTML, CSS, browser JavaScript, images, downloads, and other public assets served from `public/`, with PHP available only where it supports the HTML site through local preview routing, form handling, reusable includes, lightweight server-side helpers, search or sitemap helpers, maintenance scripts, or other documented support tools.
-
-Do not make PHP the primary website model unless the repository, issue, or user explicitly requires a PHP-backed feature. Do not create WordPress-style, CMS-backed, custom database-backed, or persistent runtime applications by default.
-
 All files intended to be served by the browser must be stored inside `public/`.
 
 Do not use `content/` as the public web root, do not scatter website files across the repository root, and do not create nested public folders such as `public/public/`.
@@ -340,7 +336,7 @@ A compliant generic website repository should have this pattern where applicable
 ```text
 website-repository/
   public/
-    index.html
+    index.html or index.php
     .htaccess
     robots.txt
     sitemap.xml
@@ -359,7 +355,7 @@ website-repository/
   .gitignore
 ```
 
-Use `public/index.html` as the default website entry point. Use `public/index.php` only when a documented PHP-backed support feature needs PHP at the entry point and the release, changelog, hosting, and validation notes record that decision.
+If a website uses PHP as its entry point, `public/index.php` may be used instead of `public/index.html`.
 
 If certain public files are not applicable, do not create dummy files unless the project requires them.
 
@@ -407,17 +403,16 @@ The work is complete when:
 
 1. The repository uses `public/` as the browser-served website folder.
 2. All browser-served website files are stored inside `public/`.
-3. The website is set up as an HTML website by default, with PHP limited to documented support tools or explicitly approved server-side features.
-4. Repository support files remain outside `public/`.
-5. The repository can run locally with the standard PHP local-preview command.
-6. The repository includes `public/.htaccess` where Apache compatibility is required.
-7. The repository documents local preview and the `public/` folder rule.
-8. Public-folder validation and local smoke tests pass where present.
-9. The local preview checklist is available.
-10. No nested `public/public/` structure is created.
-11. No browser-served website files are left in the repository root.
-12. No provider-specific platform names are added to the generic public-folder standard.
-13. No secrets, local-only files, or development-only debug pages are exposed under `public/`.
+3. Repository support files remain outside `public/`.
+4. The repository can run locally with the standard PHP local-preview command.
+5. The repository includes `public/.htaccess` where Apache compatibility is required.
+6. The repository documents local preview and the `public/` folder rule.
+7. Public-folder validation and local smoke tests pass where present.
+8. The local preview checklist is available.
+9. No nested `public/public/` structure is created.
+10. No browser-served website files are left in the repository root.
+11. No provider-specific platform names are added to the generic public-folder standard.
+12. No secrets, local-only files, or development-only debug pages are exposed under `public/`.
 
 ---
 
@@ -429,13 +424,13 @@ For multi-site or monorepo repositories, confirm the target site and path during
 
 Use `Guidance/cloudron-lamp-container-website-types.md` as the source guidance for Cloudron LAMP website-type suitability. Keep this section operational and defer extended explanation to that guidance file.
 
-For websites expected to run on Cloudron LAMP, treat the Cloudron LAMP app as a traditional Linux, Apache, and PHP-capable hosting environment for HTML-first websites. MySQL or MariaDB may be available where the repository explicitly requires it, but APES CIC websites should not become database-backed applications by default. Cloudron LAMP is not a general-purpose application runtime for persistent non-PHP services.
+For websites expected to run on Cloudron LAMP, treat the Cloudron LAMP app as a traditional Linux, Apache, MySQL or MariaDB, and PHP hosting environment. It is not a general-purpose application runtime for persistent non-PHP services.
 
 When creating a website or migrating a website, resolve the website type during planning using Section 3 unless the website type is already explicit in the request, issue, repository documentation, or migration source. Record the selected website type in the plan, issue update, pull request summary, or final response where relevant.
 
 ### Cloudron LAMP Decision Rule
 
-Use the Cloudron LAMP container when the website can run from `public/` as an HTML website using `index.html`, static assets, Apache, `.htaccess`, and optional PHP support tools. Use `index.php` or MySQL or MariaDB only when the repository evidence or user-approved scope requires that extra server-side support.
+Use the Cloudron LAMP container when the website can run from `public/` using `index.html`, `index.php`, Apache, `.htaccess`, PHP, and optionally MySQL or MariaDB.
 
 Do not approve a Cloudron LAMP hosting assumption until repository inspection confirms that production routes do not depend on an unsupported runtime server.
 
@@ -443,12 +438,12 @@ Do not approve a Cloudron LAMP hosting assumption until repository inspection co
 
 Before planning a new website or website migration, identify which category best describes the requested site:
 
-1. HTML website using static HTML, CSS, browser JavaScript, and public assets.
-2. HTML website with PHP support tools, such as routing, forms, includes, search helpers, sitemap helpers, or maintenance scripts.
+1. Static HTML, CSS, and JavaScript website.
+2. PHP website.
 3. Public information website.
 4. Microsite, campaign site, appeal page, or landing page.
-5. Exceptional WordPress-style or CMS-backed PHP website that has explicit approval.
-6. Exceptional custom PHP and MySQL or MariaDB application that has explicit approval.
+5. WordPress-style or CMS-backed PHP website.
+6. Custom PHP and MySQL or MariaDB application.
 7. Knowledge base or help centre.
 8. Simple form-led website.
 9. Built frontend-only single page application served as static files.
@@ -459,12 +454,12 @@ Before planning a new website or website migration, identify which category best
 
 Cloudron LAMP is suitable for:
 
-1. HTML websites using static HTML, CSS, and browser JavaScript.
+1. Static HTML, CSS, and JavaScript websites.
 2. Browser-served single page application builds where the built static files are deployed into `public/`.
-3. HTML websites with PHP support tools, including local preview routing, lightweight includes, forms, search helpers, sitemap helpers, or maintenance scripts.
+3. PHP websites using `public/index.php` or PHP page files.
 4. Apache-served public websites, microsites, campaign sites, service sites, landing pages, information hubs, and knowledge hubs.
-5. WordPress-style or CMS-style PHP websites only when explicitly approved, subject to plugin security, update, and maintenance controls.
-6. Custom PHP and MySQL or MariaDB applications only when explicitly approved and documented.
+5. WordPress-style or CMS-style PHP websites, subject to plugin security, update, and maintenance controls.
+6. Custom PHP and MySQL or MariaDB applications.
 7. Modest public directories, listings, resource hubs, adoption listings, care article indexes, or service directories.
 8. PHP form handlers, provided UK GDPR, consent, email handling, retention, and security requirements are designed and documented.
 9. Composer-based PHP dependencies where the repository and Cloudron LAMP deployment process support them.
@@ -496,10 +491,10 @@ A React, Vue, Vite, Astro, Eleventy, or similar frontend project may be Cloudron
 
 Prefer Cloudron LAMP for APES CIC:
 
-1. HTML-first public information websites.
+1. Public information websites.
 2. Division, service, and campaign microsites.
 3. Fundraising, appeal, volunteer, adoption, rescue, and sponsorship landing pages.
-4. HTML-first care guides, policy pages, FAQs, and welfare knowledge hubs, with PHP support tools only where useful.
+4. Static or PHP-backed care guides, policy pages, FAQs, and welfare knowledge hubs.
 5. Modest searchable resource directories or listing pages.
 6. Form-led public journeys where privacy, consent, validation, spam protection, and retention are documented.
 
@@ -510,7 +505,7 @@ Avoid Cloudron LAMP for complex staff systems, sensitive operational records, re
 Before completing Cloudron LAMP-targeted work, Codex must check and report:
 
 1. Whether browser-served files live under `public/`.
-2. Whether the site entry point is the default `public/index.html`, or whether `public/index.php` is explicitly justified by a documented PHP support feature.
+2. Whether the site entry point is `public/index.html` or `public/index.php`.
 3. Whether `.htaccess` is present and Apache-compatible where required.
 4. Whether clean URLs work through Apache fallback rules or PHP routing.
 5. Whether any route requires a persistent Node, Python, Ruby, Go, Java, WebSocket, worker, or daemon process.

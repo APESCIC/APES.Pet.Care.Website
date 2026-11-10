@@ -5,16 +5,16 @@ Public website repository for <https://www.apespetcare.org.uk/>, maintained by t
 <p align="center">
   <a href="https://www.apespetcare.org.uk/"><img alt="Website: www.apespetcare.org.uk live" src="https://img.shields.io/badge/website-www.apespetcare.org.uk%20live-0f7f75"></a>
   <img alt="Status: Stable" src="https://img.shields.io/badge/status-stable-0f7f75">
-  <img alt="Version: v3.3.11" src="https://img.shields.io/badge/version-v3.3.11-0f7f75">
+  <img alt="Version: v3.3.12" src="https://img.shields.io/badge/version-v3.3.12-0f7f75">
   <img alt="Runtime: HTML with PHP support tools" src="https://img.shields.io/badge/runtime-HTML%20%2B%20PHP%20tools-245c6b">
   <img alt="Hosting: Cloudron LAMP compatible" src="https://img.shields.io/badge/hosting-Cloudron%20LAMP%20compatible-55423d">
 </p>
 
 ## Current release
 
-- Version: `v3.3.11`
+- Version: `v3.3.12`
 - Status: Stable
-- Summary: Clinic contact details now use the Morris Street address with Merseyside, the new St Helens phone number, and a nofollow JavaScript-hydrated clinic email that is not offered in structured data for crawlers.
+- Summary: Maintenance release. The site is unchanged for visitors; it now follows the APES repository standards (Laragon preview, versions from the milestone version, tagged releases and deploys, GitHub security checks).
 - Public Change Log Hub: `/changelog/`
 - Canonical release records: root `VERSION`, root `CHANGELOG.md`, `public/VERSION`, and `public/CHANGELOG.md`
 

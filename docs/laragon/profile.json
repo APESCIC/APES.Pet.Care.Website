@@ -1,0 +1,14 @@
+{
+    "project": "apes-pet-care-website",
+    "site": "apes-pet-care-website.test",
+    "appUrl": "http://apes-pet-care-website.test",
+    "documentRoot": "public",
+    "php": "8.4",
+    "phpThreadSafe": false,
+    "apacheHandler": "fcgid",
+    "database": null,
+    "node": "22",
+    "devServer": "browsersync",
+    "devServerPort": 3103,
+    "devServerUiPort": 3113
+}

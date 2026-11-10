@@ -1,3 +1,41 @@
+## [3.3.12] - 2026-11-10
+
+<span class="pill pill-version">Version v3.3.12</span>
+<span class="pill pill-status">Stable</span>
+<span class="pill pill-type">Changed</span>
+
+### Summary
+
+Maintenance release. The website looks and works as before; behind the scenes it now follows the APES repository standards for local preview, versioning, releases and security checks.
+
+### Detailed changes
+
+- Laragon is the only local set-up: `docs/laragon/`, `scripts/laragon-setup.ps1` and the live preview gate `scripts/preview.ps1`, with Browsersync live reload on port 3103. `dev/router.php` and the `php -S` and XAMPP instructions are gone.
+- `node_modules/` is no longer tracked in git; `.gitignore` ignores it.
+- Versions come from the milestone version through `scripts/milestone-version`; `VERSION` is now plain semver (`3.3.12`) and footers show `v3.3.12`.
+- Each version ships once: one tag, one Release (`release.yml`) and one deploy of that tag (`deploy/cloudron/deploy.ps1 -Tag`, with backup, swap, `/VERSION` check and rollback).
+- CI: site checks, PHP lint, ESLint, PR title and branch checks, dependency review, CodeQL and Dependabot into the `dependencies` branch. `brace-expansion` updated to 5.0.12 for high-severity advisories.
+
+### Affected areas
+
+- Website: APES Pet Care Clinic public website.
+- Page or route: footer version text on every page and the Change Log Hub.
+- Files changed: repository tooling, `VERSION`, `public/VERSION`, footer version text, `CHANGELOG.md`, `public/CHANGELOG.md` and `public/changelog/index.html`.
+- User groups affected: none directly; maintainers.
+- Public impact: none beyond the version label.
+- Internal impact: GitHub issue #45 tracks this release.
+
+### Version decision
+
+- Previous version: `v3.3.11`
+- New version: `v3.3.12`
+- Version type: Stable patch release
+
+### Validation
+
+- Checks run: `php scripts/check-site.php`, `npx eslint .`, `sh dev/check-public-root.sh`, the smoke test against `http://apes-pet-care-website.test`, and CI on the milestone pull request.
+- Known limitations: `php dev/sync-site-chrome.php --check` reports 26 out-of-sync pages, the same as on `main` before this release.
+- Rollback notes: deploy the previous tag, or swap back to `/app/data/public.previous`.
 ## [v3.3.11] - 2026-08-19
 
 <span class="pill pill-version">Version v3.3.11</span>

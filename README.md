@@ -5,16 +5,16 @@ Public website repository for <https://www.apespetcare.org.uk/>, maintained by t
 <p align="center">
   <a href="https://www.apespetcare.org.uk/"><img alt="Website: www.apespetcare.org.uk live" src="https://img.shields.io/badge/website-www.apespetcare.org.uk%20live-0f7f75"></a>
   <img alt="Status: Stable" src="https://img.shields.io/badge/status-stable-0f7f75">
-  <img alt="Version: v3.3.11" src="https://img.shields.io/badge/version-v3.3.11-0f7f75">
+  <img alt="Version: v3.3.12" src="https://img.shields.io/badge/version-v3.3.12-0f7f75">
   <img alt="Runtime: HTML with PHP support tools" src="https://img.shields.io/badge/runtime-HTML%20%2B%20PHP%20tools-245c6b">
   <img alt="Hosting: Cloudron LAMP compatible" src="https://img.shields.io/badge/hosting-Cloudron%20LAMP%20compatible-55423d">
 </p>
 
 ## Current release
 
-- Version: `v3.3.11`
+- Version: `v3.3.12`
 - Status: Stable
-- Summary: Clinic contact details now use the Morris Street address with Merseyside, the new St Helens phone number, and a nofollow JavaScript-hydrated clinic email that is not offered in structured data for crawlers.
+- Summary: Maintenance release. The site is unchanged for visitors; it now follows the APES repository standards (Laragon preview, versions from the milestone version, tagged releases and deploys, GitHub security checks).
 - Public Change Log Hub: `/changelog/`
 - Canonical release records: root `VERSION`, root `CHANGELOG.md`, `public/VERSION`, and `public/CHANGELOG.md`
 
@@ -27,7 +27,7 @@ The current architecture intentionally stays simple:
 - Static HTML route files under `public/`
 - Shared CSS, JavaScript, images, and consent-gated third-party client-side integrations only
 - Apache and `.htaccess` routing with `index.html` as the preferred public entrypoint
-- PHP support tools for local preview routing, public-root checks, and smoke testing
+- PHP support tools for shared-chrome syncing, public-root checks, and smoke testing
 - No frontend framework, package manager, database, persistent PHP application, or build pipeline required for the live public site
 
 ## Repository structure
@@ -36,7 +36,7 @@ The current architecture intentionally stays simple:
 .
 |-- .github/
 |-- dev/
-|   |-- router.php
+|   |-- sync-site-chrome.php
 |   |-- check-public-root.sh
 |   `-- smoke-test.sh
 |-- docs/
@@ -77,48 +77,21 @@ The current architecture intentionally stays simple:
 
 ## Local development
 
-This repo does not use the `npm` or Python workflow previously documented here. The supported local workflow is an HTML website previewed through PHP support tooling.
+Laragon is the only supported local set-up. Its Apache serves `public/` with the same `.htaccess` rules as Cloudron.
 
-Important preview note:
+1. Once: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\laragon-setup.ps1` links `C:\laragon\www\apes-pet-care-website` to this clone, so Laragon serves `http://apes-pet-care-website.test`.
+2. Before each change: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1` pulls the latest changes and starts Browsersync on `http://localhost:3103/`, which reloads the page on save.
+3. Use `docs/preview-checklist.md` for route, footer, sitemap, error-page, and hosting checks, and run `php scripts/check-site.php`.
 
-- The site uses relative local asset paths in `public/`, but the preferred preview path is the HTTP loopback URL served from `public/`.
+Notes:
+
 - External integrations and absolute web URLs such as `https://...` remain unchanged.
 - Legacy snapshot files under `public/crawl/` are maintenance artifacts and are not part of the runtime website.
 - Keep public routes as static HTML, CSS, browser JavaScript, images, and Apache configuration so the deployable tree remains Cloudron LAMP-compatible.
+- The repo-level `eslint.config.js` covers the browser JavaScript under `public/assets/js/`; CI runs it.
+- This repository does not depend on PHP to render the public routes in production. PHP is used for support tooling: shared-chrome syncing, public-root checks, and the smoke test.
 
-Recommended VS Code workflow:
-
-0. Accept the recommended workspace extensions for ESLint and PHP support when VS Code prompts, or review `.vscode/extensions.json`.
-1. Start the PHP local preview server from the repository root.
-2. Open `http://127.0.0.1:8080/` in VS Code Simple Browser, Codex browser, or a normal browser.
-3. Use `docs/preview-checklist.md` for route, footer, sitemap, error-page, and hosting checks.
-4. Stop the server when you finish previewing.
-
-The repo-level `eslint.config.js` only covers the browser JavaScript under `public/assets/js/` and exists to support local editor validation rather than a production build pipeline.
-
-LAMP-aligned preview workflow in any terminal where PHP CLI is available:
-
-```powershell
-php -S 127.0.0.1:8080 -t public dev/router.php
-```
-
-If `php` is not on `PATH` on Windows, use the XAMPP PHP CLI directly:
-
-```powershell
-C:\xampp\php\php.exe -S 127.0.0.1:8080 -t public dev/router.php
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8080/
-```
-
-If you are using Apache, Cloudron, or another static web server, point the web root at `public/`.
-
-This repository does not depend on PHP to render the public routes in production. PHP is used for support tooling: the local router, public-root checks, and smoke-test workflow.
-
-See `docs/local-preview.md` for the full local preview workflow.
+See `docs/local-preview.md` for the full local preview workflow, and `CONTRIBUTING.md` for how work ships.
 
 ## HTML-first route architecture
 

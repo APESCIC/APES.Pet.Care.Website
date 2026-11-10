@@ -27,7 +27,6 @@ Use these files and directories as the active website architecture:
 - `CHANGELOG.md`
 - `public/VERSION`
 - `public/CHANGELOG.md`
-- `dev/router.php`
 - `dev/sync-site-chrome.php`
 - `dev/check-public-root.sh`
 - `dev/smoke-test.sh`

@@ -1,56 +1,43 @@
 # Local Preview
 
-This repository is an HTML website with PHP support tools. Public pages remain static HTML under `public/`; PHP is used for local preview routing and validation parity only.
+This repository is an HTML website with PHP support tools. Public pages are static HTML under `public/`. Laragon is the only supported local set-up: its Apache serves `public/` with the same `.htaccess` rules as Cloudron, so redirects, blocked maintenance folders such as `public/crawl/`, and the branded 403, 404 and 500 pages behave as they do live.
 
-The runtime routes preview the generated HTML files under `public/`. Source fragments under `public/includes/` are blocked from public serving and should be synced into the runtime pages before preview if they are edited.
+The runtime routes are the generated HTML files under `public/`. Source fragments under `public/includes/` are blocked from public serving and must be synced into the runtime pages before preview if they are edited.
 
-## Preferred Preview
-
-Use the PHP built-in server from the repository root:
+## Set up once
 
 ```powershell
-php -S 127.0.0.1:8080 -t public dev/router.php
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\laragon-setup.ps1
 ```
 
-If `php` is not on `PATH` on Windows, use the XAMPP PHP CLI directly instead:
+It links `C:\laragon\www\apes-pet-care-website` to this clone, so Laragon serves `http://apes-pet-care-website.test`. See `docs/laragon/profile.md`.
+
+## Preview
 
 ```powershell
-C:\xampp\php\php.exe -S 127.0.0.1:8080 -t public dev/router.php
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1
 ```
 
-Open:
+It pulls the latest changes, checks the site serves this checkout and starts Browsersync. Open:
 
 ```text
-http://127.0.0.1:8080/
+http://localhost:3103/
 ```
 
-The router serves `public/index.html` and `public/**/index.html` routes, blocks maintenance-only folders such as `public/crawl/`, preserves static asset serving, and returns the branded HTML error pages for local checks.
-
-## Fallback Preview
-
-If PHP CLI is unavailable on Windows but XAMPP is installed, prefer `C:\xampp\php\php.exe` before falling back to a static server. Use a static server only for quick visual inspection, and record that limitation in validation notes because Apache-style redirects, blocked folders, and branded error handling are not fully exercised.
+Browsersync proxies `http://apes-pet-care-website.test` and reloads the page when anything under `public/` changes.
 
 ## Validation
 
-Run these where the local environment supports them:
+Run these with Laragon's PHP 8.4 on `PATH`:
 
 ```powershell
-php -l dev/router.php
+php scripts/check-site.php
 php -l dev/sync-site-chrome.php
 php dev/sync-site-chrome.php
 php dev/sync-site-chrome.php --check
 sh dev/check-public-root.sh
-php -S 127.0.0.1:8080 -t public dev/router.php
-sh dev/smoke-test.sh
-```
-
-The same commands can be run with the XAMPP PHP executable when `php` is not on `PATH`, for example:
-
-```powershell
-C:\xampp\php\php.exe -l dev/router.php
-C:\xampp\php\php.exe -l dev/sync-site-chrome.php
-C:\xampp\php\php.exe dev/sync-site-chrome.php --check
-C:\xampp\php\php.exe -S 127.0.0.1:8080 -t public dev/router.php
+BASE_URL=http://apes-pet-care-website.test sh dev/smoke-test.sh
+npx eslint .
 ```
 
 Keep `public/` as the web root. Do not add `public/index.php` unless a future approved task changes the architecture.

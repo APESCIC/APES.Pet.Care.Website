@@ -15,7 +15,6 @@ fail() {
 [ -f public/403.html ] || fail "missing public/403.html"
 [ -f public/404.html ] || fail "missing public/404.html"
 [ -f public/500.html ] || fail "missing public/500.html"
-[ -f dev/router.php ] || fail "missing dev/router.php"
 
 for path in index.html 403.html 404.html 500.html robots.txt sitemap.xml site.webmanifest; do
   [ ! -e "$path" ] || fail "browser-served root-level file should live in public/: $path"

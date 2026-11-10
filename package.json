@@ -1,5 +1,13 @@
 {
-  "devDependencies": {
-    "eslint": "^10.4.1"
-  }
+    "name": "apes-pet-care-website",
+    "private": true,
+    "description": "APES Pet Care Website - Laragon live reload and checks",
+    "scripts": {
+        "dev": "browser-sync start --proxy http://apes-pet-care-website.test --port 3103 --ui-port 3113 --files \"public/**/*\" --no-open --no-notify",
+        "check": "php scripts/check-site.php"
+    },
+    "devDependencies": {
+        "browser-sync": "^3.0.4",
+        "eslint": "^10.4.1"
+    }
 }

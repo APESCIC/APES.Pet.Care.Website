@@ -1,80 +1,68 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "PHP lint dev/router.php",
-      "type": "shell",
-      "command": "php",
-      "args": [
-        "-l",
-        "dev/router.php"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "PHP lint dev/sync-site-chrome.php",
-      "type": "shell",
-      "command": "php",
-      "args": [
-        "-l",
-        "dev/sync-site-chrome.php"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Check synced site chrome",
-      "type": "shell",
-      "command": "php",
-      "args": [
-        "dev/sync-site-chrome.php",
-        "--check"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Start APES Pet Care Clinic preview server",
-      "type": "shell",
-      "command": "php",
-      "args": [
-        "-S",
-        "127.0.0.1:8080",
-        "-t",
-        "public",
-        "dev/router.php"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      },
-      "problemMatcher": []
-    }
-  ]
+    "version":  "2.0.0",
+    "tasks":  [
+                  {
+                      "label":  "Laragon live preview (scripts/preview.ps1)",
+                      "type":  "shell",
+                      "command":  "powershell",
+                      "args":  [
+                                   "-NoProfile",
+                                   "-ExecutionPolicy",
+                                   "Bypass",
+                                   "-File",
+                                   "${workspaceFolder}/scripts/preview.ps1"
+                               ],
+                      "options":  {
+                                      "cwd":  "${workspaceFolder}"
+                                  },
+                      "presentation":  {
+                                           "reveal":  "always",
+                                           "panel":  "dedicated",
+                                           "clear":  true
+                                       },
+                      "problemMatcher":  [
+
+                                         ]
+                  },
+                  {
+                      "label":  "PHP lint dev/sync-site-chrome.php",
+                      "type":  "shell",
+                      "command":  "php",
+                      "args":  [
+                                   "-l",
+                                   "dev/sync-site-chrome.php"
+                               ],
+                      "options":  {
+                                      "cwd":  "${workspaceFolder}"
+                                  },
+                      "presentation":  {
+                                           "reveal":  "always",
+                                           "panel":  "dedicated",
+                                           "clear":  true
+                                       },
+                      "problemMatcher":  [
+
+                                         ]
+                  },
+                  {
+                      "label":  "Check synced site chrome",
+                      "type":  "shell",
+                      "command":  "php",
+                      "args":  [
+                                   "dev/sync-site-chrome.php",
+                                   "--check"
+                               ],
+                      "options":  {
+                                      "cwd":  "${workspaceFolder}"
+                                  },
+                      "presentation":  {
+                                           "reveal":  "always",
+                                           "panel":  "dedicated",
+                                           "clear":  true
+                                       },
+                      "problemMatcher":  [
+
+                                         ]
+                  }
+              ]
 }

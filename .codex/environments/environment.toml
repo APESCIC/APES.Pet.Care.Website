@@ -46,13 +46,6 @@ $ErrorActionPreference = "Continue"
 
 Write-Host "Cleaning Codex worktree..."
 
-if (Test-Path "docker-compose.yml") {
-    docker compose down --remove-orphans
-}
-elseif (Test-Path "compose.yml") {
-    docker compose down --remove-orphans
-}
-
 if (Test-Path ".cache\tmp") {
     Remove-Item ".cache\tmp" -Recurse -Force
 }

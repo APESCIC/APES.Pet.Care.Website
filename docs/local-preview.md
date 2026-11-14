@@ -1,16 +1,16 @@
 # Local Preview
 
-This repository is an HTML website with PHP support tools. Public pages are static HTML under `public/`. Laragon is the only supported local set-up: its Apache serves `public/` with the same `.htaccess` rules as Cloudron, so redirects, blocked maintenance folders such as `public/crawl/`, and the branded 403, 404 and 500 pages behave as they do live.
+This repository is an HTML website with PHP support tools. Public pages are static HTML under `public/`. Laravel Herd serves `public/` locally. Herd runs nginx, which ignores `.htaccess`, so `LocalValetDriver.php` in the repository root applies the same `public/.htaccess` rules as Cloudron's Apache: redirects, blocked maintenance folders such as `public/crawl/`, and the branded 403, 404 and 500 pages behave as they do live. The driver and `dev/herd-router.php` sit outside `public/` and are never deployed.
 
 The runtime routes are the generated HTML files under `public/`. Source fragments under `public/includes/` are blocked from public serving and must be synced into the runtime pages before preview if they are edited.
 
 ## Set up once
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\laragon-setup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\herd-setup.ps1
 ```
 
-It links `C:\laragon\www\apes-pet-care-website` to this clone, so Laragon serves `http://apes-pet-care-website.test`. See `docs/laragon/profile.md`.
+It links this clone in Herd as `http://apes-pet-care-website.test`, isolated to PHP 8.4 as on Cloudron. See `docs/herd/profile.md`.
 
 ## Preview
 
@@ -18,7 +18,7 @@ It links `C:\laragon\www\apes-pet-care-website` to this clone, so Laragon serves
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1
 ```
 
-It pulls the latest changes, checks the site serves this checkout and starts Browsersync. Open:
+It pulls the latest changes, checks the site serves this checkout and starts Browsersync with Herd's Node 22. Open:
 
 ```text
 http://localhost:3103/
@@ -28,13 +28,13 @@ Browsersync proxies `http://apes-pet-care-website.test` and reloads the page whe
 
 ## Validation
 
-Run these with Laragon's PHP 8.4 on `PATH`:
+Run these with Herd first on `PATH`. `php84` is Herd's PHP 8.4, as on Cloudron; plain `php` is Herd's global 8.5, and `herd php` always exits 0, which hides failures:
 
 ```powershell
-php scripts/check-site.php
-php -l dev/sync-site-chrome.php
-php dev/sync-site-chrome.php
-php dev/sync-site-chrome.php --check
+php84 scripts/check-site.php
+php84 -l dev/sync-site-chrome.php
+php84 dev/sync-site-chrome.php
+php84 dev/sync-site-chrome.php --check
 sh dev/check-public-root.sh
 BASE_URL=http://apes-pet-care-website.test sh dev/smoke-test.sh
 npx eslint .

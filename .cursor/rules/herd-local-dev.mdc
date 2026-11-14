@@ -1,0 +1,33 @@
+---
+description: Laravel Herd local preview for this site - the preview slots for Cursor's live-preview-gate skill
+alwaysApply: true
+---
+
+# Herd local development
+
+Cursor's `live-preview-gate` and `herd-local-preview` skills own the preview gate steps; this rule fills in this repository's values. Laravel Herd serves `public/` with nginx, `LocalValetDriver.php` applies `public/.htaccess` the way Cloudron's Apache does, PHP 8.4 (isolated, as on Cloudron) runs any `.php` file, and Browsersync reloads the page on save. There is no database. Never use `file:///` as the preview.
+
+## Preview slots
+
+| Slot | Value |
+| --- | --- |
+| Site URL | `http://apes-pet-care-website.test` |
+| Preview to open | `http://localhost:3103` (Browsersync proxying the site, UI on 3113) |
+| Preview command | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1` (exit 0 ready, 1 blocked, 3 needs a decision) |
+| Set up or repair | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\herd-setup.ps1` |
+| PHP | 8.4, isolated with `herd isolate 8.4` |
+| Node | Herd's Node 22 (`%USERPROFILE%\.config\herd\bin\nvm\v22.*`), for Browsersync only |
+| Database, mail, env file | None |
+
+`scripts\preview.ps1` merges `origin/main` into the milestone branch (never rebases or pushes), runs `npm ci` when the lock file changed, checks `/VERSION` matches this checkout's `public/VERSION`, checks `/crawl/` returns 403 (the driver is in use) and starts Browsersync.
+
+## Commands
+
+| Task | Command |
+| --- | --- |
+| Browsersync live reload | `npm run dev` |
+| Version helper | `php84 scripts/milestone-version help` |
+
+- Run PHP with `php84` (Herd's PHP 8.4 shim). Plain `php` is Herd's global 8.5, and `herd php` always exits 0, which hides failed checks.
+- Put Herd and its Node 22 first on `PATH` for agent shells: `$env:Path = "$env:USERPROFILE\.config\herd\bin;" + (Get-ChildItem "$env:USERPROFILE\.config\herd\bin\nvm" -Directory -Filter 'v22.*' | Sort-Object Name -Descending | Select-Object -First 1).FullName + ";$env:Path"`.
+- Profile values: `docs/herd/profile.json` (read by `scripts/herd-setup.ps1`) and `docs/herd/profile.md`.

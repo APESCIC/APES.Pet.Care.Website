@@ -7,7 +7,7 @@ $publicRoot = $root . DIRECTORY_SEPARATOR . 'public';
 $includesRoot = $publicRoot . DIRECTORY_SEPARATOR . 'includes';
 
 $version = trim((string) file_get_contents($root . DIRECTORY_SEPARATOR . 'VERSION'));
-$siteVersionLabel = 'APES Pet Care Clinic ' . $version;
+$siteVersionLabel = 'APES Pet Care Clinic v' . $version;
 
 $fragments = [
     'header' => loadFragment($includesRoot . DIRECTORY_SEPARATOR . 'header.html'),
@@ -56,10 +56,13 @@ foreach ($pages as $pagePath) {
         exit(1);
     }
 
-    $original = (string) file_get_contents($pagePath);
+    $raw = (string) file_get_contents($pagePath);
+    $eol = str_contains($raw, "\r\n") ? "\r\n" : "\n";
+    $original = str_replace("\r\n", "\n", $raw);
     $metadata = $routeMetadata[$relativePath];
     $depth = routeDepth($relativePath);
-    $basePath = $depth === 0 ? './' : str_repeat('../', $depth);
+    // Error pages are served at whatever address was requested, so only root-relative links resolve.
+    $basePath = isErrorPage($metadata) ? '/' : ($depth === 0 ? './' : str_repeat('../', $depth));
 
     $updated = syncBodyMetadata($original, $metadata);
     $renderedHeader = renderHeader($fragments, $basePath, $metadata);
@@ -81,7 +84,7 @@ foreach ($pages as $pagePath) {
     if ($updated !== $original) {
         $changedFiles[] = $relativePath;
         if (!$checkMode) {
-            file_put_contents($pagePath, $updated);
+            file_put_contents($pagePath, str_replace("\n", $eol, $updated));
         }
     }
 }
@@ -108,7 +111,7 @@ function loadFragment(string $path): string
         exit(1);
     }
 
-    return rtrim((string) file_get_contents($path)) . PHP_EOL;
+    return rtrim(str_replace("\r\n", "\n", (string) file_get_contents($path))) . "\n";
 }
 
 function discoverRuntimePages(string $publicRoot): array
@@ -145,6 +148,11 @@ function discoverRuntimePages(string $publicRoot): array
 function normaliseRelativePath(string $path): string
 {
     return str_replace('\\', '/', $path);
+}
+
+function isErrorPage(array $metadata): bool
+{
+    return in_array($metadata['page'], ['403', '404', '500'], true);
 }
 
 function routeDepth(string $relativePath): int
@@ -264,7 +272,7 @@ function syncSection(string $html, string $name, string $fallbackPattern, string
 {
     $start = '<!-- APES:' . strtoupper($name) . ' START -->';
     $end = '<!-- APES:' . strtoupper($name) . ' END -->';
-    $wrapped = $start . PHP_EOL . rtrim($replacementContent) . PHP_EOL . $end;
+    $wrapped = $start . "\n" . rtrim($replacementContent) . "\n" . $end;
     $markerPattern = '~' . preg_quote($start, '~') . '.*?' . preg_quote($end, '~') . '~s';
 
     if (preg_match($markerPattern, $html) === 1) {

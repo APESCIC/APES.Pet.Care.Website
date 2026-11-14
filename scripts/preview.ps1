@@ -1,20 +1,18 @@
 <#
 .SYNOPSIS
     Live preview gate, steps 1 and 2: load the latest code, then check the
-    Laragon preview serves it. Run before any development work.
+    Herd preview serves it. Run before any development work.
 
 .DESCRIPTION
     1. Stops if tracked files have uncommitted changes. Fetches origin, fast-
        forwards the branch, and merges origin/main into it (a merge commit, never
        a rebase; a conflict is aborted and reported). Nothing is pushed.
-    2. Runs composer install or npm ci when a lock file is newer than the
-       installed dependencies, and reports migrations that have not run (it
-       never runs them).
-    3. Checks Laragon is running and the site serves the checked-out code: for
-       a Laravel app, /healthz shows the revision and PHP through FastCGI; for a
-       static site, /VERSION matches the VERSION file.
-    4. Starts the dev server (Vite or Browsersync) in its own window if nothing
-       listens on its port.
+    2. Runs npm ci with Herd's Node 22 when package-lock.json is newer than the
+       installed dependencies.
+    3. Checks Herd serves the checked-out code: /VERSION matches public/VERSION,
+       and /crawl/ is blocked, which proves LocalValetDriver.php applies
+       public/.htaccess.
+    4. Starts Browsersync in its own window if nothing listens on its port.
 
     Opening the page in Cursor's browser is the agent's step 3.
 
@@ -28,17 +26,14 @@ param(
     [switch]$NoSync,
     [switch]$NoMergeMain,
     [switch]$NoDevServer,
-    [string]$LaragonRoot = 'C:\laragon'
+    [string]$HerdHome = (Join-Path $env:USERPROFILE '.config\herd')
 )
 
-# This repository's Laragon values (docs/laragon/profile.md).
+# This repository's Herd values (docs/herd/profile.md).
 $Config = @{
     AppUrl     = 'http://apes-pet-care-website.test'
-    Folder     = 'C:\laragon\www\apes-pet-care-website'
-    Php        = '8.4'
-    Laravel    = $false
+    Node       = '22'
     DevPort    = 3103
-    HealthPath = '/VERSION'
     DevCommand = 'npm run dev'
 }
 
@@ -56,26 +51,25 @@ function Invoke-Native([scriptblock]$Command) {
     return [pscustomobject]@{ Code = $LASTEXITCODE; Output = ($output | Out-String).Trim() }
 }
 
-function Get-Page([string]$Url) {
+function Get-Status([string]$Url) {
     try {
-        $content = (Invoke-WebRequest $Url -UseBasicParsing -TimeoutSec 60).Content
+        $response = Invoke-WebRequest $Url -UseBasicParsing -TimeoutSec 60 -MaximumRedirection 0
+        $content = $response.Content
         if ($content -is [byte[]]) { $content = [Text.Encoding]::UTF8.GetString($content) }
-        return $content
+        return [pscustomobject]@{ Code = [int]$response.StatusCode; Content = "$content" }
     } catch {
-        $stream = $_.Exception.Response.GetResponseStream()
-        if ($null -eq $stream) { return $null }
-        return (New-Object IO.StreamReader $stream).ReadToEnd()
+        if ($null -eq $_.Exception.Response) { return [pscustomobject]@{ Code = 0; Content = '' } }
+        return [pscustomobject]@{ Code = [int]$_.Exception.Response.StatusCode; Content = '' }
     }
 }
 
 $repo = Split-Path $PSScriptRoot -Parent
-$phpDir = Get-ChildItem "$LaragonRoot\bin\php" -Directory -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match "^php-$([regex]::Escape($Config.Php))\.\d+(-\d+)?-(nts-)?Win32" } |
-    Sort-Object @{ Expression = { $_.Name -notmatch '-nts-' }; Ascending = $true }, @{ Expression = { $_.Name }; Descending = $true } | Select-Object -First 1
-if (-not $phpDir) { Stop-Preview 1 "Laragon has no PHP $($Config.Php). Run scripts\laragon-setup.ps1." }
-$nodeDir = Get-ChildItem "$LaragonRoot\bin\nodejs" -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^node-v?22(\D|$)' } | Select-Object -First 1
-$env:Path = "$($phpDir.FullName);$LaragonRoot\bin\composer;$(if ($nodeDir) { $nodeDir.FullName });" + $env:Path
-if (-not $env:XDEBUG_MODE) { $env:XDEBUG_MODE = 'off' }
+$herdBin = Join-Path $HerdHome 'bin'
+if (-not (Test-Path (Join-Path $herdBin 'herd.bat'))) { Stop-Preview 1 "Laravel Herd is not installed ($herdBin\herd.bat is missing)." }
+$nodeDir = Get-ChildItem (Join-Path $herdBin 'nvm') -Directory -Filter "v$($Config.Node).*" -ErrorAction SilentlyContinue |
+    Sort-Object { [version]$_.Name.TrimStart('v') } -Descending | Select-Object -First 1
+if (-not $nodeDir) { Stop-Preview 3 "Herd has no Node $($Config.Node). Ask Bambie before running herd node:install $($Config.Node)." }
+$env:Path = "$herdBin;$($nodeDir.FullName);" + $env:Path
 
 Push-Location $repo
 try {
@@ -111,55 +105,26 @@ try {
     $short = $head.Substring(0, 12)
     Write-Ok "$branch at $short"
 
-    # 2. Dependencies and migrations --------------------------------------------
-    Write-Step 'Dependencies'
-    if (Test-Path 'composer.lock') {
-        $installed = Join-Path $repo 'vendor\composer\installed.json'
-        if (-not (Test-Path $installed) -or (Get-Item 'composer.lock').LastWriteTime -gt (Get-Item $installed).LastWriteTime) {
-            $run = Invoke-Native { php "$LaragonRoot\bin\composer\composer.phar" install --no-interaction --no-progress }
-            if ($run.Code -ne 0) { Stop-Preview 1 "composer install failed: $($run.Output)" }
-            Write-Ok 'Ran composer install'
-        } else { Write-Ok 'Composer dependencies are current' }
-    }
-    if (Test-Path 'package-lock.json') {
-        $npmMarker = Join-Path $repo 'node_modules\.package-lock.json'
-        if (-not (Test-Path $npmMarker) -or (Get-Item 'package-lock.json').LastWriteTime -gt (Get-Item $npmMarker).LastWriteTime) {
-            $run = Invoke-Native { npm ci --no-audit --no-fund }
-            if ($run.Code -ne 0) { Stop-Preview 1 "npm ci failed: $($run.Output)" }
-            Write-Ok 'Ran npm ci (restart the dev server if it was running)'
-        } else { Write-Ok 'npm dependencies are current' }
-    }
-    if ($Config.Laravel) {
-        $pending = Invoke-Native { php artisan migrate:status --pending --no-ansi }
-        if ($pending.Code -eq 0 -and $pending.Output -match '\bPending\b' -and $pending.Output -notmatch 'No pending migrations') {
-            Write-Warn 'There are migrations that have not run. Ask before running php artisan migrate.'
-        } else { Write-Ok 'No pending migrations' }
-    }
+    # 2. Dependencies -----------------------------------------------------------
+    Write-Step "Dependencies (Node $($nodeDir.Name) from Herd)"
+    $npmMarker = Join-Path $repo 'node_modules\.package-lock.json'
+    if (-not (Test-Path $npmMarker) -or (Get-Item 'package-lock.json').LastWriteTime -gt (Get-Item $npmMarker).LastWriteTime) {
+        $run = Invoke-Native { npm ci --no-audit --no-fund }
+        if ($run.Code -ne 0) { Stop-Preview 1 "npm ci failed: $($run.Output)" }
+        Write-Ok 'Ran npm ci (restart the dev server if it was running)'
+    } else { Write-Ok 'npm dependencies are current' }
 
-    # 3. Laragon and the preview -------------------------------------------------
-    Write-Step "Laragon preview $($Config.AppUrl)"
-    $needed = if ($Config.Laravel) { @('laragon', 'httpd', 'mysqld') } else { @('laragon', 'httpd') }
-    $missing = @($needed | Where-Object { -not (Get-Process $_ -ErrorAction SilentlyContinue) })
-    if ($missing.Count -gt 0) { Stop-Preview 1 "Not running: $($missing -join ', '). Click Start All in Laragon." }
-    if ($Config.Laravel) {
-        $health = Get-Page "$($Config.AppUrl)$($Config.HealthPath)" | ConvertFrom-Json
-        if ($null -eq $health -or $null -eq $health.local) { Stop-Preview 1 "$($Config.AppUrl)$($Config.HealthPath) did not answer with the local block. Is APP_ENV=local in .env, and has Laragon been reloaded?" }
-        if ($health.local.git_revision -ne $short) {
-            Invoke-Native { php artisan optimize:clear } | Out-Null
-            $health = Get-Page "$($Config.AppUrl)$($Config.HealthPath)" | ConvertFrom-Json
-        }
-        if ($health.local.git_revision -ne $short) { Stop-Preview 1 "The preview serves $($health.local.git_revision), not $short. Check the junction $($Config.Folder) points at this clone." }
-        if ($health.local.php_sapi -ne 'cgi-fcgi') { Stop-Preview 1 "The preview runs PHP as $($health.local.php_sapi), not FastCGI (cgi-fcgi). Run scripts\laragon-setup.ps1 to check the PHP handler." }
-        if ($health.local.php -notlike "$($Config.Php).*") { Write-Warn "The preview runs PHP $($health.local.php), not the profile's $($Config.Php). scripts\laragon-setup.ps1 says how to fix it." }
-        Write-Ok "Serves $short on PHP $($health.local.php) through FastCGI"
-        if ($health.status -ne 'ok') { Write-Warn "$($Config.HealthPath) reports $($health.status). The preview still works; start the Laragon service it needs if the task needs it." }
-    } else {
-        $served = "$(Get-Page "$($Config.AppUrl)/VERSION")".Trim()
-        $expected = (Get-Content (Join-Path $repo 'public\VERSION') -Raw).Trim()
-        if (-not $served) { Stop-Preview 1 "$($Config.AppUrl)/VERSION did not answer. Check the junction $($Config.Folder) points at this clone and Laragon has been reloaded." }
-        if ($served -ne $expected) { Stop-Preview 1 "The preview serves VERSION $served, not $expected from this checkout. Check the junction $($Config.Folder) points at this clone." }
-        Write-Ok "Serves this checkout (VERSION $served)"
-    }
+    # 3. Herd preview ------------------------------------------------------------
+    Write-Step "Herd preview $($Config.AppUrl)"
+    $version = Get-Status "$($Config.AppUrl)/VERSION"
+    if ($version.Code -eq 0) { Stop-Preview 1 "$($Config.AppUrl) did not answer. Open Herd and check it is running, or run scripts\herd-setup.ps1." }
+    $served = $version.Content.Trim()
+    $expected = (Get-Content (Join-Path $repo 'public\VERSION') -Raw).Trim()
+    if ($served -ne $expected) { Stop-Preview 1 "The preview serves VERSION '$served', not $expected from this checkout. Run scripts\herd-setup.ps1 to link this clone." }
+    Write-Ok "Serves this checkout (VERSION $served)"
+    $blocked = Get-Status "$($Config.AppUrl)/crawl/"
+    if ($blocked.Code -ne 403) { Stop-Preview 1 "/crawl/ returned $($blocked.Code), not 403, so LocalValetDriver.php is not applying public/.htaccess. Run herd restart, then this again." }
+    Write-Ok 'LocalValetDriver.php applies public/.htaccess'
 
     # 4. Dev server ------------------------------------------------------------
     Write-Step "Dev server on port $($Config.DevPort)"
@@ -173,7 +138,7 @@ try {
     }
 
     Write-Step 'Ready'
-    if ($Config.Laravel) { Write-Ok "Open $($Config.AppUrl) in Cursor's browser (live reload on port $($Config.DevPort))." } else { Write-Ok "Open http://localhost:$($Config.DevPort) in Cursor's browser (Browsersync proxying $($Config.AppUrl), reloads on save)." }
+    Write-Ok "Open http://localhost:$($Config.DevPort) in Cursor's browser (Browsersync proxying $($Config.AppUrl), reloads on save)."
     if ($before -ne $head) { Write-Ok "Code moved from $($before.Substring(0, 12)) to $short during the sync." }
 } finally {
     Pop-Location

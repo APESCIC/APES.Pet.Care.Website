@@ -2,7 +2,7 @@
     "version":  "2.0.0",
     "tasks":  [
                   {
-                      "label":  "Laragon live preview (scripts/preview.ps1)",
+                      "label":  "Herd live preview (scripts/preview.ps1)",
                       "type":  "shell",
                       "command":  "powershell",
                       "args":  [
@@ -27,7 +27,7 @@
                   {
                       "label":  "PHP lint dev/sync-site-chrome.php",
                       "type":  "shell",
-                      "command":  "php",
+                      "command":  "php84",
                       "args":  [
                                    "-l",
                                    "dev/sync-site-chrome.php"
@@ -47,7 +47,7 @@
                   {
                       "label":  "Check synced site chrome",
                       "type":  "shell",
-                      "command":  "php",
+                      "command":  "php84",
                       "args":  [
                                    "dev/sync-site-chrome.php",
                                    "--check"

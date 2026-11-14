@@ -43,5 +43,7 @@ assert_status "/404.html" "200"
 assert_status "/500.html" "200"
 assert_status "/crawl/" "403"
 assert_status "/missing-smoke-test-route/" "404"
+assert_status "/Care%20Plans/care-plans/" "200"
+assert_status "/APES%20Lab%20Services/apes-lab-services" "200"
 
 printf '%s\n' "smoke tests passed against ${BASE_URL}"

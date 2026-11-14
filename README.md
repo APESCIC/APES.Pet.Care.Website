@@ -77,11 +77,11 @@ The current architecture intentionally stays simple:
 
 ## Local development
 
-Laragon is the only supported local set-up. Its Apache serves `public/` with the same `.htaccess` rules as Cloudron.
+Laravel Herd serves the site locally. Herd's nginx ignores `.htaccess`, so `LocalValetDriver.php` in the repository root applies the same `public/.htaccess` rules as Cloudron's Apache. It sits outside `public/` and is never deployed.
 
-1. Once: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\laragon-setup.ps1` links `C:\laragon\www\apes-pet-care-website` to this clone, so Laragon serves `http://apes-pet-care-website.test`.
+1. Once: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\herd-setup.ps1` links this clone in Herd (PHP 8.4, as on Cloudron), so Herd serves `http://apes-pet-care-website.test`.
 2. Before each change: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1` pulls the latest changes and starts Browsersync on `http://localhost:3103/`, which reloads the page on save.
-3. Use `docs/preview-checklist.md` for route, footer, sitemap, error-page, and hosting checks, and run `php scripts/check-site.php`.
+3. Use `docs/preview-checklist.md` for route, footer, sitemap, error-page, and hosting checks, and run `php84 scripts/check-site.php` (Herd's PHP 8.4).
 
 Notes:
 
@@ -89,7 +89,7 @@ Notes:
 - Legacy snapshot files under `public/crawl/` are maintenance artifacts and are not part of the runtime website.
 - Keep public routes as static HTML, CSS, browser JavaScript, images, and Apache configuration so the deployable tree remains Cloudron LAMP-compatible.
 - The repo-level `eslint.config.js` covers the browser JavaScript under `public/assets/js/`; CI runs it.
-- This repository does not depend on PHP to render the public routes in production. PHP is used for support tooling: shared-chrome syncing, public-root checks, and the smoke test.
+- This repository does not depend on PHP to render the public routes in production. PHP is used for support tooling: shared-chrome syncing, public-root checks, the smoke test and the local Herd driver.
 
 See `docs/local-preview.md` for the full local preview workflow, and `CONTRIBUTING.md` for how work ships.
 

@@ -1,14 +1,14 @@
 # Contributing to APES Pet Care Website
 
-Thank you for helping. This page is the short version; the rules agents and people follow are in [`AGENTS.md`](AGENTS.md), [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc) and [`.cursor/rules/laragon-local-dev.mdc`](.cursor/rules/laragon-local-dev.mdc).
+Thank you for helping. This page is the short version; the rules agents and people follow are in [`AGENTS.md`](AGENTS.md), [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc) and [`.cursor/rules/herd-local-dev.mdc`](.cursor/rules/herd-local-dev.mdc).
 
 ## Local preview
 
-Laragon is the only supported local set-up.
+Laravel Herd serves the site locally.
 
-1. Run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\laragon-setup.ps1` once. It links `C:\laragon\www\apes-pet-care-website` to your clone so Laragon serves `http://apes-pet-care-website.test` from `public/`.
+1. Run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\herd-setup.ps1` once. It links your clone in Herd, isolated to PHP 8.4, so Herd serves `http://apes-pet-care-website.test` from `public/`. `LocalValetDriver.php` applies `public/.htaccess`, because Herd's nginx ignores it.
 2. Before each change, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\preview.ps1`. It pulls the latest changes and starts Browsersync on `http://localhost:3103`, which reloads the page when you save.
-3. Check every page you change on desktop and mobile, and run `php scripts/check-site.php`.
+3. Check every page you change on desktop and mobile, and run `php84 scripts/check-site.php` (Herd's PHP 8.4).
 
 ## How work ships
 

@@ -1,8 +1,21 @@
 # Agent instructions for APES Pet Care Website
 
-APES Pet Care Website (`https://www.apespetcare.org.uk`) is maintained by the Association of Protecting Exotic Species CIC (APES CIC). It is a static HTML, CSS and JavaScript website served from `public/`, with PHP used only for the maintenance tools in `dev/`. The owner is Bambie Murphy, Director. Write UK English (organisation, behaviour, colour, licence) in the site, docs, issues and pull requests.
+Cursor's user rules and skills set how work is done here (branches, issues, pull requests, merge, release, deploy, ship gate, decisions and safety). This file describes this repository and fills the named slots below. If anything here disagrees with them, Cursor's rules win and this file is corrected in the same milestone.
 
-This file is the source of truth for agents. How work ships is in [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc) and local development in [`.cursor/rules/laragon-local-dev.mdc`](.cursor/rules/laragon-local-dev.mdc); this file points to them rather than repeating them.
+The owner is Bambie Murphy, Director. Write UK English (organisation, behaviour, colour, licence) in the site, docs, issues and pull requests. Never print, paste or commit secrets. This repository's shipping details are in [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc) and its preview slots in [`.cursor/rules/herd-local-dev.mdc`](.cursor/rules/herd-local-dev.mdc).
+
+## About the app
+
+APES Pet Care Website (`https://www.apespetcare.org.uk`) is the public website of APES Pet Care Clinic, maintained by the Association of Protecting Exotic Species CIC (APES CIC). It tells pet owners about the clinic's services, bookings, policies and donations.
+
+- Repository: `APESCIC/APES.Pet.Care.Website`. Work only in this repository.
+
+## Stack and architecture
+
+- Static HTML, CSS and browser JavaScript served from `public/`, the web root. No build step, no database, no runtime server code.
+- Apache rules in `public/.htaccess` handle redirects, blocked folders (`includes/`, `crawl/`) and the branded 403, 404 and 500 pages on Cloudron.
+- The shared header and footer live in `public/includes/*.html` and are synced into every page by `dev/sync-site-chrome.php`.
+- PHP 8.4 is used only for the maintenance tools in `dev/` and `scripts/` and for the local Herd driver (`LocalValetDriver.php`, `dev/herd-router.php`), none of which is deployed.
 
 ## Ground rules
 
@@ -12,19 +25,38 @@ This file is the source of truth for agents. How work ships is in [`.cursor/rule
 - Every Cloudron app is production. Read-only commands (status, logs) run freely. A deploy needs the ship-gate answer in the current chat. Any other change needs an AskQuestion answer with `Back up, then <change> (Recommended)` first. Don't change DNS or Cloudflare.
 - Security checks use GitHub's free features only: Dependabot (into the `dependencies` branch), dependency review and CodeQL. Don't add paid or third-party scanners.
 
-## Local development (Laragon)
+## Local development and preview
 
-Laragon is the only supported local set-up; never suggest `php -S`, XAMPP, WAMP, containers or virtual machines. Run the live preview gate before any change: `scripts\preview.ps1`, then open the preview in Cursor's browser and say "Preview ready, starting work". Full steps: [`laragon-local-dev.mdc`](.cursor/rules/laragon-local-dev.mdc).
+Laravel Herd serves the site locally. The preview gate steps are Cursor's `live-preview-gate` and `herd-local-preview` skills; this table fills their slots.
 
 | Item | Value |
 | --- | --- |
-| Site | `http://apes-pet-care-website.test`, served by Laragon's Apache from `public/` through the junction `C:\laragon\www\apes-pet-care-website` |
-| Live reload | `npm run dev`: Browsersync on `http://localhost:3103` |
-| PHP | Laragon's PHP 8.4 NTS through FastCGI, as on Cloudron (8.4). Only `.php` files use it |
+| Clone | `C:\Users\BambieMurphy\Documents\GitHub\APES.Pet.Care.Website` |
+| Herd site | `apes-pet-care-website` (linked; PHP 8.4 isolated, as on Cloudron) |
+| Preview URL | `http://apes-pet-care-website.test`; open Browsersync on `http://localhost:3103` in Cursor's browser |
+| Preview command | `scripts\preview.ps1` (starts Browsersync with `npm run dev`) |
+| HMR port | None; Browsersync live reload on 3103 (UI on 3113) |
+| Env file | None |
 | Database | None, so there is no demo seeder |
-| Set up or repair | `scripts\laragon-setup.ps1` |
-| Site checks | `php scripts/check-site.php` (also run by CI) |
-| Profile | [docs/laragon/profile.md](docs/laragon/profile.md) |
+| Mail | None |
+| Set up or repair | `scripts\herd-setup.ps1` |
+| Profile | [docs/herd/profile.md](docs/herd/profile.md) |
+
+- Herd runs nginx, which ignores `.htaccess`. `LocalValetDriver.php` in the repository root applies `public/.htaccess` locally (redirects, `[F]` blocks, error pages, folder slash redirects), so local routes behave as on Cloudron. `/crawl/` returning 403 proves it is in use.
+- Browsersync needs Herd's Node 22 (`%USERPROFILE%\.config\herd\bin\nvm\v22.*`); Herd's default Node is newer. The scripts put 22 first on `PATH`.
+- Run PHP commands with `php84` (Herd's PHP 8.4 shim). Plain `php` runs Herd's global 8.5 or whichever PHP comes first on the machine `PATH`, and `herd php` uses 8.4 but always exits 0, which hides failed checks.
+
+## Tests and checks
+
+| Check | Command |
+| --- | --- |
+| Site checks | `php84 scripts/check-site.php` (CI runs it too) |
+| PHP lint | `php84 -l <file>` (CI lints every tracked PHP file) |
+| Site chrome in sync | `php84 dev/sync-site-chrome.php --check` |
+| Public-root contract | `sh dev/check-public-root.sh` (Git Bash) |
+| Route smoke test | `BASE_URL=http://apes-pet-care-website.test sh dev/smoke-test.sh` (Git Bash) |
+| ESLint | `npx eslint .` (CI runs it too) |
+| CI workflows | `.github/workflows/ci.yml`, `codeql.yml`, `dependency-review.yml`, `milestone-version-check.yml`, `release.yml` |
 
 ## Shipping and versioning
 
@@ -62,8 +94,7 @@ Nothing reaches `main`, and nothing is tagged, released or deployed, before stag
 ## Site specifics
 
 - The shared header and footer live in `public/includes/*.html`. After changing one, run `php dev/sync-site-chrome.php`, then `php dev/sync-site-chrome.php --check`.
-- Public-root contract: `sh dev/check-public-root.sh` (Git Bash). Route smoke test against the Laragon site: `BASE_URL=http://apes-pet-care-website.test sh dev/smoke-test.sh`.
-- ESLint: `npx eslint .` (CI runs it too).
+- Checks are listed under "Tests and checks" above.
 - Change log entries (`CHANGELOG.md`, `public/CHANGELOG.md` and the `/changelog/` page) use this shape:
 
 ```markdown
@@ -88,6 +119,20 @@ Short plain-language description of the release.
 
 - Checks run, manual checks (routes, breakpoints, footer, sitemap, error pages), known limitations, rollback notes.
 ```
+
+## Decisions and gotchas
+
+- 2026-11-14: local development moved to Laravel Herd, decided by Bambie ([#50](https://github.com/APESCIC/APES.Pet.Care.Website/issues/50)); do not use Laragon for this repository.
+- 2026-11-14: a local `LocalValetDriver.php` copies the `public/.htaccess` behaviour under Herd's nginx rather than accepting differences, decided by Bambie ([#50](https://github.com/APESCIC/APES.Pet.Care.Website/issues/50)).
+- Gotcha: the legacy `Care%20Plans` and `APES%20Lab%20Services` redirects in `public/.htaccess` never fire, on Cloudron or locally, because Apache matches rules against the decoded path (a space, not `%20`).
+- Gotcha: `npm run dev` fails with `Cannot find module` after a dependencies merge until `npm ci` runs; `scripts\preview.ps1` does this when `package-lock.json` is newer than `node_modules`.
+
+## Where to find things
+
+- Local preview: [docs/local-preview.md](docs/local-preview.md) and [docs/herd/profile.md](docs/herd/profile.md).
+- Release history: [CHANGELOG.md](CHANGELOG.md), [public/CHANGELOG.md](public/CHANGELOG.md) and the `/changelog/` page.
+- Version tooling: `scripts/milestone-version` and [scripts/MilestoneVersion/fields.json](scripts/MilestoneVersion/fields.json).
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md); pull request checklist: [.github/pull_request_template.md](.github/pull_request_template.md).
 
 # Website standards
 
@@ -378,7 +423,7 @@ Required Cloudron LAMP checks before completion:
 10. UK GDPR, consent, retention, security, and audit implications are noted for forms or stored personal data.
 11. README, changelog, Change Log Hub, version records, generated output, and issue updates reflect the hosting impact.
 12. Local preview remains aligned with Cloudron LAMP assumptions.
-13. The changed pages have been checked in the Laragon preview (`http://apes-pet-care-website.test`, or Browsersync on `http://localhost:3103`).
+13. The changed pages have been checked in the Herd preview (`http://apes-pet-care-website.test`, or Browsersync on `http://localhost:3103`).
 14. Direct `file:///` access has been checked for browser served static pages and public assets where applicable, or a justified server required blocker has been recorded.
 
 ## Security, safety, and UK GDPR rules

@@ -124,7 +124,7 @@ Short plain-language description of the release.
 
 - 2026-11-14: local development moved to Laravel Herd, decided by Bambie ([#50](https://github.com/APESCIC/APES.Pet.Care.Website/issues/50)); do not use Laragon for this repository.
 - 2026-11-14: a local `LocalValetDriver.php` copies the `public/.htaccess` behaviour under Herd's nginx rather than accepting differences, decided by Bambie ([#50](https://github.com/APESCIC/APES.Pet.Care.Website/issues/50)).
-- Gotcha: the legacy `Care%20Plans` and `APES%20Lab%20Services` redirects in `public/.htaccess` never fire, on Cloudron or locally, because Apache matches rules against the decoded path (a space, not `%20`).
+- Gotcha: Apache matches `RewriteRule` patterns against the decoded path, so match a space in a legacy URL with `\s`, not `%20` ([#53](https://github.com/APESCIC/APES.Pet.Care.Website/issues/53)).
 - Gotcha: `npm run dev` fails with `Cannot find module` after a dependencies merge until `npm ci` runs; `scripts\preview.ps1` does this when `package-lock.json` is newer than `node_modules`.
 
 ## Where to find things

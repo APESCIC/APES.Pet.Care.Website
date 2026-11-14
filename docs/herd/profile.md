@@ -38,4 +38,4 @@ It pulls the latest changes, checks `http://apes-pet-care-website.test/VERSION` 
 
 - Put Herd first on `PATH` in agent shells: `$env:Path = "$env:USERPROFILE\.config\herd\bin;" + (Get-ChildItem "$env:USERPROFILE\.config\herd\bin\nvm" -Directory -Filter 'v22.*' | Sort-Object Name -Descending | Select-Object -First 1).FullName + ";$env:Path"`. Run PHP with `php84`: plain `php` is Herd's global 8.5, and `herd php` uses 8.4 but always exits 0, which hides failed checks.
 - After editing `LocalValetDriver.php`, Herd picks it up on the next request; if not, run `herd restart`.
-- The legacy `Care%20Plans` and `APES%20Lab%20Services` redirects in `public/.htaccess` don't fire on Cloudron or locally, because Apache matches rules against the decoded path.
+- Apache, and the driver, match `RewriteRule` patterns against the decoded path: a space in a legacy URL is `\s` in the pattern, not `%20`.

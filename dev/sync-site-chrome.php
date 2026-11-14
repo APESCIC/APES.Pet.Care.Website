@@ -61,7 +61,8 @@ foreach ($pages as $pagePath) {
     $original = str_replace("\r\n", "\n", $raw);
     $metadata = $routeMetadata[$relativePath];
     $depth = routeDepth($relativePath);
-    $basePath = $depth === 0 ? './' : str_repeat('../', $depth);
+    // Error pages are served at whatever address was requested, so only root-relative links resolve.
+    $basePath = isErrorPage($metadata) ? '/' : ($depth === 0 ? './' : str_repeat('../', $depth));
 
     $updated = syncBodyMetadata($original, $metadata);
     $renderedHeader = renderHeader($fragments, $basePath, $metadata);
@@ -147,6 +148,11 @@ function discoverRuntimePages(string $publicRoot): array
 function normaliseRelativePath(string $path): string
 {
     return str_replace('\\', '/', $path);
+}
+
+function isErrorPage(array $metadata): bool
+{
+    return in_array($metadata['page'], ['403', '404', '500'], true);
 }
 
 function routeDepth(string $relativePath): int

@@ -29,6 +29,9 @@ jobs:
       - name: Site checks (VERSION, pages, sitemap, 404)
         run: php scripts/check-site.php
 
+      - name: Shared header and footer in sync
+        run: php dev/sync-site-chrome.php --check
+
       - name: PHP lint
         shell: bash
         run: |

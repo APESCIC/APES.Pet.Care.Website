@@ -40,7 +40,7 @@ This is the one rule for how work ships in this repository. `AGENTS.md`, `CONTRI
 
 ## Hotfixes
 
-Only with Bambie's approval through AskQuestion, recorded on the issue: a `cursor/fix/<issue>-<slug>` branch from `origin/main`, released as `vX.Y.(Z+1)` through the same merge, release and deploy steps, then `main` merged back into the open milestone branch.
+Only with Bambie's written approval, recorded on the issue: a `cursor/fix/<issue>-<slug>` branch from `origin/main`, released as `vX.Y.(Z+1)` through the same merge, release and deploy steps, then `main` merged back into the open milestone branch.
 
 ## Never
 

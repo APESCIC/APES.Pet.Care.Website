@@ -2,7 +2,9 @@
 
 Cursor's user rules and skills set how work is done here (branches, issues, pull requests, merge, release, deploy, ship gate, decisions and safety). This file describes this repository and fills the named slots below. If anything here disagrees with them, Cursor's rules win and this file is corrected in the same milestone.
 
-The owner is Bambie Murphy, Director. Write UK English (organisation, behaviour, colour, licence) in the site, docs, issues and pull requests. Never print, paste or commit secrets. This repository's shipping details are in [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc) and its preview slots in [`.cursor/rules/herd-local-dev.mdc`](.cursor/rules/herd-local-dev.mdc).
+Cursor/agent layout standard: https://github.com/apescic-director/Cursor/blob/bmurphy/cursor-agent-standard-81b0/docs/cursor-agent-standards.md
+
+The owner is Bambie Murphy, Director. Write UK English (organisation, behaviour, colour, licence) in the site, docs, issues and pull requests. Never print, paste or commit secrets. Secrets live only in APES Vault (Bitwarden). Development is tracked only in GitHub issues, sub-issues and `vMAJOR.MINOR.PATCH` milestones — never Linear.
 
 ## About the app
 
@@ -16,18 +18,11 @@ APES Pet Care Website (`https://www.apespetcare.org.uk`) is the public website o
 - Apache rules in `public/.htaccess` handle redirects, blocked folders (`includes/`, `crawl/`) and the branded 403, 404 and 500 pages on Cloudron.
 - The shared header and footer live in `public/includes/*.html` and are synced into every page by `dev/sync-site-chrome.php`.
 - PHP 8.4 is used only for the maintenance tools in `dev/` and `scripts/` and for the local Herd driver (`LocalValetDriver.php`, `dev/herd-router.php`), none of which is deployed.
-
-## Ground rules
-
-- Never print, paste or commit passwords, secrets, tokens, keys, `.env` values or Cloudron credentials (including the app's `/app/data/credentials.txt`).
-- Ask Bambie for every decision with AskQuestion: the best option first, ending in `(Recommended)`, with the reason in one line; a safe `Stop here` last; and the prompt ending "Or choose Other to type your own." Don't ask again about something a rule, the confirmed plan or an earlier answer settles.
-- Work only in `APESCIC/APES.Pet.Care.Website`.
-- Every Cloudron app is production. Read-only commands (status, logs) run freely. A deploy needs the ship-gate answer in the current chat. Any other change needs an AskQuestion answer with `Back up, then <change> (Recommended)` first. Don't change DNS or Cloudflare.
-- Security checks use GitHub's free features only: Dependabot (into the `dependencies` branch), dependency review and CodeQL. Don't add paid or third-party scanners.
+- Node is used locally only for Browsersync live reload (`npm run dev`).
 
 ## Local development and preview
 
-Laravel Herd serves the site locally. The preview gate steps are Cursor's `live-preview-gate` and `herd-local-preview` skills; this table fills their slots.
+Laravel Herd is the only local stack. There is no database and no demo seeder. The preview gate steps are Cursor's `live-preview-gate` and `herd-local-preview` skills; detailed slots also live in [`.cursor/rules/herd-local-dev.mdc`](.cursor/rules/herd-local-dev.mdc).
 
 | Item | Value |
 | --- | --- |
@@ -37,14 +32,19 @@ Laravel Herd serves the site locally. The preview gate steps are Cursor's `live-
 | Preview command | `scripts\preview.ps1` (starts Browsersync with `npm run dev`) |
 | HMR port | None; Browsersync live reload on 3103 (UI on 3113) |
 | Env file | None |
-| Database | None, so there is no demo seeder |
+| Database | None |
 | Mail | None |
 | Set up or repair | `scripts\herd-setup.ps1` |
 | Profile | [docs/herd/profile.md](docs/herd/profile.md) |
 
-- Herd runs nginx, which ignores `.htaccess`. `LocalValetDriver.php` in the repository root applies `public/.htaccess` locally (redirects, `[F]` blocks, error pages, folder slash redirects), so local routes behave as on Cloudron. `/crawl/` returning 403 proves it is in use.
+### Local development with Laravel Herd
+
+This project runs on Laravel Herd. Run `herd site:info` for the URL, PHP version and connected services.
+
+- Herd's nginx ignores `.htaccess`. `LocalValetDriver.php` in the repository root applies `public/.htaccess` locally (redirects, `[F]` blocks, error pages, folder slash redirects), so local routes behave as on Cloudron. `/crawl/` returning 403 proves it is in use.
 - Browsersync needs Herd's Node 22 (`%USERPROFILE%\.config\herd\bin\nvm\v22.*`); Herd's default Node is newer. The scripts put 22 first on `PATH`.
 - Run PHP commands with `php84` (Herd's PHP 8.4 shim). Plain `php` runs Herd's global 8.5 or whichever PHP comes first on the machine `PATH`, and `herd php` uses 8.4 but always exits 0, which hides failed checks.
+- Use `herd status` if something doesn't respond; `herd list` shows every command (`--json` for structured output).
 
 ## Tests and checks
 
@@ -58,43 +58,46 @@ Laravel Herd serves the site locally. The preview gate steps are Cursor's `live-
 | ESLint | `npx eslint .` (CI runs it too) |
 | CI workflows | `.github/workflows/ci.yml`, `codeql.yml`, `dependency-review.yml`, `milestone-version-check.yml`, `release.yml` |
 
-## Shipping and versioning
+## Workflow slots
 
-Work ships once per milestone, by the milestone's version, never by GitHub's milestone number: one `milestone/vX-Y-Z-<slug>` branch, one draft PR into `main`, one merge commit, one `vX.Y.Z` tag and Release, one deploy of that tag. The rule is [`version-shipping.mdc`](.cursor/rules/version-shipping.mdc); the skills are [`complete-next-version`](.cursor/skills/complete-next-version/SKILL.md) and [`release-version`](.cursor/skills/release-version/SKILL.md); the command is `/complete-next-version`.
+Shipping follows Cursor's `github-milestone-completion` and `ship-gate` skills. This repository's one shipping rule is [`.cursor/rules/version-shipping.mdc`](.cursor/rules/version-shipping.mdc); the skills are [`complete-next-version`](.cursor/skills/complete-next-version/SKILL.md) and [`release-version`](.cursor/skills/release-version/SKILL.md); the command is `/complete-next-version`.
 
-- `php scripts/milestone-version next` prints the next milestone, its branch, PR title and Release title. `bump vX.Y.Z` sets `VERSION`, `public/VERSION` and every footer that repeats the version, once per milestone.
-- **An issue is done** when its acceptance criteria are met and committed on the milestone branch. Post the Committed comment and leave it open; it closes when the milestone PR merges.
-- **A milestone is done** only after the single merge, the release, a verified deploy (`https://www.apespetcare.org.uk/VERSION` shows the tag) and close-out.
-- Hotfixes only with Bambie's AskQuestion approval, recorded on the issue (see the rule).
+| Slot | Value |
+| --- | --- |
+| Milestone branch pattern | `milestone/vX-Y-Z-<slug>`, printed by `php scripts/milestone-version next` |
+| Version files | `VERSION`, `public/VERSION` and the fields in `scripts/MilestoneVersion/fields.json`, set once by `php scripts/milestone-version bump vX.Y.Z` |
+| Release tooling | Push the `vX.Y.Z` tag; `release.yml` publishes the Release |
+| Area labels | None |
+| Issue title prefix | `[Type] Short title` |
 
-### Milestone shipping
-
-1. Complete **all** the milestone's issues on its milestone branch.
-2. One merge into `main`: a merge commit, never a squash or rebase.
-3. One release: the `vX.Y.Z` tag on that merge commit and its GitHub Release.
-4. One deploy of that tag.
-
-Nothing reaches `main`, and nothing is tagged, released or deployed, before stage 2. A hotfix may skip these stages only with Bambie's written approval recorded on the issue.
-
-## Issues
-
+- An issue is done when its acceptance criteria are met and committed on the milestone branch. Post the Committed comment and leave it open; it closes when the milestone PR merges.
+- A milestone is done only after the single merge, the release, a verified deploy (`https://www.apespetcare.org.uk/VERSION` shows the tag) and close-out.
+- Hotfixes only with Bambie's written approval, recorded on the issue (see the shipping rule).
 - Assignee `apescic-director`. Every issue has a milestone; ask before creating one.
 - Title `[Type] Short title`, where the type is `Epic`, `Story`, `Task`, `Bug`, `Chore` or `Spike`.
 - Post progress with the `github-closeout` scripts (`Add-IssueUpdate.ps1`): Started, Decision, Blocked, Split and Committed.
+- Security checks use GitHub's free features only: Dependabot (into the `dependencies` branch), dependency review and CodeQL. Don't add paid or third-party scanners.
 
-## Hosting
+## Deploy and health
 
 | Item | Value |
 | --- | --- |
-| App | Cloudron LAMP app `423d3af2-6b2b-4525-b4dd-eea7ae88b07f` |
+| Target | Cloudron LAMP app |
+| Cloudron app ID | `423d3af2-6b2b-4525-b4dd-eea7ae88b07f` |
 | Domain | `https://www.apespetcare.org.uk` |
 | Web root | `/app/data/public` (PHP 8.4, set by `/app/data/PHP_VERSION`) |
-| Deploy | `deploy/cloudron/deploy.ps1 -Tag vX.Y.Z`: backup, upload the tag's `public/`, swap, check `/VERSION`, roll back on failure |
+| Deploy command | `deploy/cloudron/deploy.ps1 -Tag vX.Y.Z`: backup, upload the tag's `public/`, swap, check `/VERSION`, roll back on failure |
+| Deploys | The release tag (never a branch) |
+| Auto-deploy couplings | None: merging or releasing does not deploy |
+| Health URL | `https://www.apespetcare.org.uk/VERSION` |
+| Version field | The whole response body (for example `3.3.12`) |
+| Secrets live in | APES Vault (never commit secrets, including the app's `/app/data/credentials.txt`) |
+
+Every Cloudron app is production. Read-only commands (status, logs) run freely. A deploy needs the ship-gate answer in the current chat. Don't change DNS or Cloudflare.
 
 ## Site specifics
 
-- The shared header and footer live in `public/includes/*.html`. After changing one, run `php dev/sync-site-chrome.php`, then `php dev/sync-site-chrome.php --check`.
-- Checks are listed under "Tests and checks" above.
+- After changing `public/includes/*.html`, run `php84 dev/sync-site-chrome.php`, then `php84 dev/sync-site-chrome.php --check`.
 - Change log entries (`CHANGELOG.md`, `public/CHANGELOG.md` and the `/changelog/` page) use this shape:
 
 ```markdown
@@ -433,7 +436,6 @@ Do not edit private production configuration or unrelated environment files.
 Do not deploy automatically.
 
 Commit and push only on the milestone branch. Merge, tag, release and deploy only after the ship-gate answer (see `.cursor/rules/version-shipping.mdc`). Never rewrite history, force push, reset, rebase, stash or delete branches unless Bambie approves that exact action.
-
 
 Never overwrite local user work. If uncommitted or unrelated changes exist, stop and explain the safest options.
 

@@ -2,7 +2,7 @@
 
 Cursor's user rules and skills set how work is done here (branches, issues, pull requests, merge, release, deploy, ship gate, decisions and safety). This file describes this repository and fills the named slots below. If anything here disagrees with them, Cursor's rules win and this file is corrected in the same milestone.
 
-Cursor/agent layout standard: https://github.com/apescic-director/Cursor/blob/main/docs/cursor-agent-standards.md
+Cursor user rules and personal skills (Agent Store) own process; this file fills named slots only.
 
 The owner is Bambie Murphy, Director. Write UK English (organisation, behaviour, colour, licence) in the site, docs, issues and pull requests. Never print, paste or commit secrets. Secrets live only in APES Vault (Bitwarden). Development is tracked only in GitHub issues, sub-issues and `vMAJOR.MINOR.PATCH` milestones — never Linear.
 
@@ -86,7 +86,7 @@ Shipping follows Cursor's `github-milestone-completion` and `ship-gate` skills. 
 | Cloudron app ID | `423d3af2-6b2b-4525-b4dd-eea7ae88b07f` |
 | Domain | `https://www.apespetcare.org.uk` |
 | Web root | `/app/data/public` (PHP 8.4, set by `/app/data/PHP_VERSION`) |
-| Deploy command | `deploy/cloudron/deploy.ps1 -Tag vX.Y.Z`: backup, upload the tag's `public/`, swap, check `/VERSION`, roll back on failure |
+| Deploy command | `gh workflow run deploy-cloudron.yml -f tag=vX.Y.Z` (break-glass: `deploy/cloudron/deploy.ps1 -Tag vX.Y.Z`) |
 | Deploys | The release tag (never a branch) |
 | Auto-deploy couplings | None: merging or releasing does not deploy |
 | Health URL | `https://www.apespetcare.org.uk/VERSION` |
